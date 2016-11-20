@@ -1,0 +1,14 @@
+body {
+  font-family: sans-serif;
+  font-size: 25px;
+  background-color: #333;
+  color: white;
+}
+
+h1 {
+  font-size: 150%;
+}
+
+ul {
+  list-style: none;
+}
