@@ -1,8 +1,8 @@
 var express = require('express')
 var CaptivePortal = require('../index').CaptivePortal
-var CnaIosClient = require('../index').CnaIosClient
-var CnaAndroidClient = require('../index').CnaAndroidClient
-CaptivePortal.clientClasses = [CnaAndroidClient, CnaIosClient]
+var SafariIosClient = require('../index').SafariIosClient
+var BrowserAndroidClient = require('../index').BrowserAndroidClient
+CaptivePortal.clientClasses = [SafariIosClient, BrowserAndroidClient]
 
 var app = express()
 var captivePortal = new CaptivePortal()

@@ -2,7 +2,7 @@ var util = require('util')
 var path = require('path')
 var BaseClient = require('./BaseClient')
 
-var pageDir = path.join(__dirname, '..', 'pages')
+var pageDir = path.join(__dirname, '..', '..', 'pages')
 
 
 // Base client for iOS devices
@@ -58,8 +58,10 @@ SafariIosClient.prototype.handler = function(req, res, next) {
 
     // Subsequent CaptiveNetworkSupport requests will be answered with the iOS "success" page,
     // so that the CNA is marked as "connected" and links open in full browser instead of CNA. 
-    else
+    else {
+      this.status = 'done'
       return res.sendFile(path.join(pageDir, 'ios', 'success.html'))
+    }
 
   // If normal request send :
   // 1. the "connecting" page, which simply reload to trigger another CaptiveNetworkSupport request
@@ -71,8 +73,11 @@ SafariIosClient.prototype.handler = function(req, res, next) {
       return res.sendFile(this.connectingPagePath)
     
     } else if (this.status === 'connected') {
-      this.emit('forget')
       return res.sendFile(this.connectedPagePath)
+    
+    } else {
+      this.emit('forget')
+      next()
     }
   }
 }

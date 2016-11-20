@@ -2,7 +2,7 @@ var util = require('util')
 var path = require('path')
 var BaseClient = require('./BaseClient')
 
-var pageDir = path.join(__dirname, '..', 'pages')
+var pageDir = path.join(__dirname, '..', '..', 'pages')
 
 
 var BaseAndroidClient = function BaseAndroidClient() { BaseClient.apply(this, arguments) }
@@ -23,17 +23,13 @@ CnaAndroidClient.recognizes = function(req) {
   return BaseAndroidClient.isConnectivityCheck(req)
 }
 
-CnaAndroidClient.prototype.handler = function(req, res, next) {
-  if (BaseAndroidClient.isConnectivityCheck(req)) {
-    return res.end('OPEN THAT CNA')
-  } else next()
-}
-
+CnaAndroidClient.prototype.handler = function(req, res, next) { next() }
 
 
 // Android client only dislay a message in CNA and a button to close itself
 var BrowserAndroidClient = exports.BrowserAndroidClient = function BrowserAndroidClient() { 
-  BaseAndroidClient.apply(this, arguments) 
+  BaseAndroidClient.apply(this, arguments)
+  this.status = 'connecting'
 }
 util.inherits(BrowserAndroidClient, BaseAndroidClient)
 
@@ -45,8 +41,11 @@ BrowserAndroidClient.recognizes = function(req) {
 
 BrowserAndroidClient.prototype.handler = function(req, res, next) {
   if (BaseAndroidClient.isConnectivityCheck(req)) {
-    return res.end('OPEN THAT CNA')
-  } else if (req.url === '/') {
-    return res.status(204)
-  } else res.sendFile(this.connectedPagePath)
+    if (this.status === 'connecting')
+      return res.sendFile(this.connectedPagePath)
+    else
+      return res.status(204).end()  
+  } else if (this.status === 'connecting' && req.url === '/specialURL') {
+    this.status = 'connected'
+  } else next()
 }
