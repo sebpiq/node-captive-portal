@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+</head>
+<body>
+  <div>Connected!</div>
+  <a id="continueLink" href="/?node-captive-portal=">continue</a>
+  <script type="text/javascript">
+    var url = '/?node-captive-portal=' + Math.random().toString(36).substring(7)
+    document.getElementById('continueLink').setAttribute('href', url)
+  </script>
+</body>
+</html>
