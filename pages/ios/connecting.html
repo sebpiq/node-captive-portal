@@ -2,20 +2,44 @@
 <html>
 <head>
   <title></title>
+  <style type="text/css">
+    html, body {
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #333;
+      color: white;
+      font-size: 30px;
+      font-family: sans-serif;
+    }
+    #content {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 100%;
+      text-align: center;
+    }
+    a.button {
+      background-color: #444;
+      color: blueviolet;
+      padding: 0.5em 1em;
+      margin-top: 1em;
+      display: inline-block;
+      text-decoration: none;
+    }
+  </style>
 </head>
 <body>
-  Connecting ...
+  <div id="content">Connecting ...</div>
   <script type="text/javascript">
     var clientId = Math.random().toString(36).substring(7)
-    
-    function reqListener () {
-      console.log(this.responseText)
+    var req = new XMLHttpRequest()
+    req.addEventListener('load', function() {
       document.location = '/connected?node-captive-portal=' + clientId
-    }
-    var oReq = new XMLHttpRequest()
-    oReq.addEventListener('load', reqListener)
-    oReq.open('GET', '/CaptiveNetworkSupport?node-captive-portal=' + clientId)
-    oReq.send()
+    })
+    req.open('GET', '/CaptiveNetworkSupport?node-captive-portal=' + clientId)
+    req.send()
   </script>
 </body>
 </html>

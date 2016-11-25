@@ -30,7 +30,7 @@ CnaIosClient.recognizes = function(req) {
 
 CnaIosClient.prototype.handler = function(req, res, next) {
   if (BaseIosClient.isCaptiveNetworkSupport(req)) {
-    return res.end('OPEN THAT CNA')
+    return res.end('NO SUCCESS')
   } else next()
 }
 
@@ -83,7 +83,7 @@ SafariIosClient.prototype.handler = function(req, res, next) {
     if (req.path === '/CaptiveNetworkSupport') {
       this.rejectCaptiveNetworkSupport = false
       setTimeout(function() { self.rejectCaptiveNetworkSupport = true }, 5000)
-      res.end()
+      res.status(200).end()
 
     } else if (req.path === '/connected') {
       fs.readFile(this.connectedPagePath, function(err, contents) {

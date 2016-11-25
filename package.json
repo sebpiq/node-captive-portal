@@ -11,15 +11,5 @@
   "dependencies": {
     "cookies": "^0.6.2",
     "mustache": "^2.3.0"
-  },
-  "devDependencies": {
-    "grunt": "^1.0.1",
-    "grunt-browserify": "^5.0.0",
-    "grunt-contrib-clean": "^1.0.0",
-    "grunt-contrib-copy": "^1.0.0",
-    "grunt-contrib-uglify": "^2.0.0",
-    "grunt-inline": "^0.3.6",
-    "underscore": "^1.8.3",
-    "xhr": "^2.3.0"
   }
 }
