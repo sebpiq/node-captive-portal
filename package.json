@@ -1,15 +1,18 @@
 {
   "name": "captive-portal",
   "version": "0.1.0",
-  "description": "",
+  "description": "A middleware for express to implement a node.js powered captive portal on your Wi-Fi network",
   "main": "index.js",
   "scripts": {
     "test": "mocha --recursive test"
   },
-  "author": "",
-  "license": "",
+  "author": "Sébastien Piquemal <sebpiq@gmail.com>",
+  "license": "MIT",
   "dependencies": {
     "cookies": "^0.6.2",
     "mustache": "^2.3.0"
+  },
+  "devDependencies": {
+    "underscore": "^1.8.3"
   }
 }

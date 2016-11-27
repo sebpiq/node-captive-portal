@@ -2,7 +2,7 @@ var assert = require('assert')
 var util = require('util')
 var _ = require('underscore')
 var CaptivePortal = require('../../src/CaptivePortal')
-var BaseClient = require('../../src/BaseClient')
+var BaseClient = require('../../src/clients/BaseClient')
 
 describe('CaptivePortal', function() {
 
