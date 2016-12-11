@@ -35,11 +35,7 @@
 <body>
   <div id="content">
     <div>Please open your browser and go to address <u>http://a.co</u></div>
-    <a class="button" id="continueLink" href="/?node-captive-portal=">Close</a>
+    <a class="button" id="continueLink" href="/node-captive-portal/connected">Close</a>
   </div>
-  <script type="text/javascript">
-    var url = '/?node-captive-portal=' + Math.random().toString(36).substring(7)
-    document.getElementById('continueLink').setAttribute('href', url)
-  </script>
 </body>
 </html>

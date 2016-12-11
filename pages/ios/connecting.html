@@ -35,12 +35,11 @@
 <body>
   <div id="content">Connecting ...</div>
   <script type="text/javascript">
-    var clientId = Math.random().toString(36).substring(7)
     var req = new XMLHttpRequest()
     req.addEventListener('load', function() {
-      document.location = '/connected?node-captive-portal=' + clientId
+      document.location = '/node-captive-portal/connected'
     })
-    req.open('GET', '/CaptiveNetworkSupport?node-captive-portal=' + clientId)
+    req.open('GET', '/node-captive-portal/connecting')
     req.send()
   </script>
 </body>

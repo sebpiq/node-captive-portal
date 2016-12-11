@@ -9,10 +9,12 @@
   "author": "Sébastien Piquemal <sebpiq@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "cookies": "^0.6.2",
-    "mustache": "^2.3.0"
+    "ip-regex": "^1.0.3",
+    "underscore": "^1.8.3"
   },
   "devDependencies": {
-    "underscore": "^1.8.3"
+    "express": "^4.14.0",
+    "supertest": "^2.0.1",
+    "async": "^2.1.4"
   }
 }

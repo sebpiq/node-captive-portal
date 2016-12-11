@@ -1,54 +1,74 @@
 var assert = require('assert')
 var util = require('util')
 var _ = require('underscore')
+var request = require('supertest')
+var express = require('express')
+
 var CaptivePortal = require('../../src/CaptivePortal')
-var BaseClient = require('../../src/clients/BaseClient')
+var Client = require('../../src/Client')
 
 describe('CaptivePortal', function() {
 
-  var DummyClient1 = function() { BaseClient.apply(this, arguments) }
-  util.inherits(DummyClient1, BaseClient)
-  DummyClient1.recognizes = function (req) { return req.dummy === 1 || req.recognizesAll }
-  var DummyClient2 = function() { BaseClient.apply(this, arguments) }
-  DummyClient2.recognizes = function (req) { return req.dummy === 2 || req.recognizesAll }
-  util.inherits(DummyClient2, BaseClient)
-  DummyClient1.prototype.handler = DummyClient2.prototype.handler 
-    = function(req, res, next) { this.handlerArgs = [ req, res, next ] }
-
-  var _getDummyReq = function(ip) { return { connection: { remoteAddress: ip } } }
-
-  CaptivePortal.clientClasses = [ DummyClient1, DummyClient2 ]
-  
-
   describe('handler', function() {
 
-    it('should create the first recognized client and call its handler', function() {
-      var captivePortal = new CaptivePortal()
-      var req, res = {}, next = null
-      assert.equal(_.keys(captivePortal.clients).length, 0)
+    var _testHandler = function(onCaptivePortal, done) {
+      var app = express()
+      
+      // Create a fake client
+      var client = new Client('11:11:11:11:11:11', '::ffff:127.0.0.1')
+      
+      // Create a captive portal with fake client handlers 
+      var captivePortal = new CaptivePortal([
+        {
+          recognizes: function(req) { return (req.path === '/bla') },
+          run: function(client, req, res, next) { res.end('blabla') }
+        },
+        {
+          recognizes: function(req) { return (req.path === '/blo') },
+          run: function(client, req, res, next) { res.end('bloblo') }
+        }
+      ])
 
-      req = _getDummyReq('2.2.2.2')
-      req.dummy = 2
-      captivePortal.handler(req, res, next)
-      assert.deepEqual(_.keys(captivePortal.clients), ['2.2.2.2'])
-      assert.ok(captivePortal.clients['2.2.2.2'] instanceof DummyClient2)
-      assert.deepEqual(captivePortal.clients['2.2.2.2'].handlerArgs, [req, res, next])
+      captivePortal.on('error', function(err) { done(err) })
+      app.use(captivePortal.handler)
+      onCaptivePortal(captivePortal, client)
 
-      req = _getDummyReq('1.1.1.1')
-      req.recognizesAll = true
-      captivePortal.handler(req, res, next)
-      assert.deepEqual(_.keys(captivePortal.clients).sort(), ['1.1.1.1', '2.2.2.2'])
-      assert.ok(captivePortal.clients['1.1.1.1'] instanceof DummyClient1)
-      assert.deepEqual(captivePortal.clients['1.1.1.1'].handlerArgs, [req, res, next])
+      request(app)
+        .get('/blo')
+        .expect(200)
+        .end(function(err, res) {
+          if (err) return done(err)
+          assert.equal(res.text, 'bloblo')
+          // Test that client got the right handler assigned
+          client.handler(null, { 
+            end: function(val) { 
+              assert.equal(val, 'bloblo')
+              done() 
+            } 
+          }, null)
+        })
+    }
+
+    it('should assign a known client a handler on first request', function(done) {
+      _testHandler(function(captivePortal, client) {
+        captivePortal.clients[client.mac] = client
+      }, done)
     })
 
-    it('should just call next if no client recognized', function() {
-      var captivePortal = new CaptivePortal()
-      var req, res = {}, called = false, next = function() { called = true }
-
-      req = _getDummyReq('1.1.1.1')
-      captivePortal.handler(req, res, next)
-      assert.equal(called, true)
+    it('should refresh clients if client not known when receiving a first request', function(done) {
+      var called = false
+      _testHandler(function(captivePortal, client) {
+          captivePortal.refresh = function(refreshDone) {
+            called = true
+            this.clients[client.mac] = client
+            refreshDone()
+          }
+        }, function(err) {
+          if (err) return done(err)
+          assert.equal(called, true)
+          done()
+        }
+      )
     })
 
   })
@@ -57,17 +77,74 @@ describe('CaptivePortal', function() {
 
     it('should forget the client when client emits "forget"', function() {
       var captivePortal = new CaptivePortal()
-      var req, res = {}, next = null
+      var client1 = new Client('AA:BB:CC:DD:EE:FF', '1.2.3.4')
+      var client2 = new Client('11:BB:CC:DD:EE:FF', '6.6.6.6')
+      captivePortal._addClient(client1)
+      captivePortal._addClient(client2)
 
-      req = _getDummyReq('1.1.1.1')
-      req.dummy = 1
-      captivePortal.handler(req, res, next)
-      assert.deepEqual(_.keys(captivePortal.clients), ['1.1.1.1'])
+      assert.deepEqual(
+        _.keys(captivePortal.clients), ['AA:BB:CC:DD:EE:FF', '11:BB:CC:DD:EE:FF'])
 
-      captivePortal.clients['1.1.1.1'].emit('forget')
-      assert.deepEqual(_.keys(captivePortal.clients), [])
+      captivePortal.clients['AA:BB:CC:DD:EE:FF'].emit('forget')
+      assert.deepEqual(_.keys(captivePortal.clients), ['11:BB:CC:DD:EE:FF'])
     })
 
+  })
+
+  describe('_getClientByIp', function() {
+
+    it('should find and return the client with given ip', function() {
+      var captivePortal = new CaptivePortal()
+      var client1 = new Client('AA:BB:CC:DD:EE:FF', '1.2.3.4')
+      var client2 = new Client('11:BB:CC:DD:EE:FF', '6.6.6.6')
+      captivePortal._addClient(client1)
+      captivePortal._addClient(client2)
+      assert.equal(captivePortal._getClientByIp('1.2.3.4'), client1)
+      assert.equal(captivePortal._getClientByIp('6.6.6.6'), client2)
+      assert.equal(captivePortal._getClientByIp('7.8.9.0'), null)
+    })
+
+  })
+
+  describe('_updateClients', function() {
+
+    it('should handle connection/disconnections', function() {
+      var captivePortal = new CaptivePortal()
+      var received = []
+      captivePortal.on('connection', function(client) { received.push([ 'c', client.mac ]) })
+      captivePortal.on('disconnection', function(client) { received.push([ 'd', client.mac ]) })
+      assert.deepEqual(captivePortal.clients, {})
+
+      // New connection
+      captivePortal._updateClients(['11:22:33:44:55:66'], {
+        'AA:BB:CC:DD:EE:FF': '2.2.2.2', 
+        '11:22:33:44:55:66': '1.1.1.1'
+      })
+      assert.deepEqual(received, [['c', '11:22:33:44:55:66']])
+      assert.deepEqual(_.keys(captivePortal.clients), ['11:22:33:44:55:66'])
+      assert.deepEqual(captivePortal.clients['11:22:33:44:55:66'].ip, '1.1.1.1')
+
+      // Another new connection
+      captivePortal._updateClients(['AA:BB:CC:DD:EE:FF', '11:22:33:44:55:66'], {
+        'AA:BB:CC:DD:EE:FF': '2.2.2.2', 
+        '11:22:33:44:55:66': '1.1.1.1'
+      })
+      assert.deepEqual(received, [['c', '11:22:33:44:55:66'], ['c', 'AA:BB:CC:DD:EE:FF']])
+      assert.deepEqual(_.keys(captivePortal.clients), ['11:22:33:44:55:66', 'AA:BB:CC:DD:EE:FF'])
+      assert.deepEqual(captivePortal.clients['11:22:33:44:55:66'].ip, '1.1.1.1')
+      assert.deepEqual(captivePortal.clients['AA:BB:CC:DD:EE:FF'].ip, '2.2.2.2')
+
+      // Disconnection
+      captivePortal._updateClients(['AA:BB:CC:DD:EE:FF'], {
+        'AA:BB:CC:DD:EE:FF': '2.2.2.2', 
+        '11:22:33:44:55:66': '1.1.1.1'
+      })
+      assert.deepEqual(received, [
+        ['c', '11:22:33:44:55:66'], ['c', 'AA:BB:CC:DD:EE:FF'], ['d', '11:22:33:44:55:66']])
+      assert.deepEqual(_.keys(captivePortal.clients), ['AA:BB:CC:DD:EE:FF'])
+      assert.deepEqual(captivePortal.clients['AA:BB:CC:DD:EE:FF'].ip, '2.2.2.2')  
+    })
+    
   })
 
 })
