@@ -12,7 +12,7 @@ _BaseHandler.prototype.isConnectivityCheck = function(req) {
 }
 
 _BaseHandler.prototype.recognizes = function(req) {
-  return this.isConnectivityCheck(req)
+  return req.get('User-Agent') && req.get('User-Agent').search('Android|android') !== -1
 }
 
 
