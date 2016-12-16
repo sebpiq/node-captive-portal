@@ -1,4 +1,5 @@
 "use strict";
+var fs = require('fs')
 var EventEmitter = require('events').EventEmitter
 var util = require('util')
 var exec = require('child_process').exec
@@ -75,12 +76,12 @@ CaptivePortal.prototype.handler = function(req, res, next) {
 CaptivePortal.prototype.refresh = function(done) {
   var self = this
   // List associations IP <-> MAC
-  exec('cat /proc/net/arp', function(err, arpResult, stderr) {
-    if (err || stderr) return done(err || new Error(stderr))
+  fs.readFile('/proc/net/arp', function(err, arpContent) {
+    if (err) return done(err)
     // List connected clients (MAC addresses)
     exec('iwinfo ' + self.options.interface + ' assoclist', function(err, iwinfoResult, stderr) {
       if (err || stderr) return done(err || new Error(stderr))
-      self._updateClients(utils.iwinfoParse(iwinfoResult), utils.arpParse(arpResult))
+      self._updateClients(utils.iwinfoParse(iwinfoResult), utils.arpParse(arpContent.toString('utf8')))
       done()
     })
   })
