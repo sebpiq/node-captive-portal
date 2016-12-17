@@ -34,8 +34,7 @@ CaptivePortal.prototype.stop = function() {
 
 CaptivePortal.prototype.handler = function(req, res, next) {
   var self = this
-  var ip = req.connection.remoteAddress
-  var client = this._getClientByIp(ip)
+  var client = this._getClientByIp(req.connection.remoteAddress)
 
   // Once the client is created, we try to assign it a suitable handler
   var _onceClient = function() {
@@ -60,7 +59,7 @@ CaptivePortal.prototype.handler = function(req, res, next) {
       if (err) 
         self._returnError(err, res)
       else {
-        client = self._getClientByIp(ip)
+        client = self._getClientByIp(req.connection.remoteAddress)
         if (client)
           _onceClient()
         // This should actually never happen
@@ -75,7 +74,7 @@ CaptivePortal.prototype.handler = function(req, res, next) {
 
 CaptivePortal.prototype.refresh = function(done) {
   var self = this
-  // List associations IP <-> MAC
+  // List associations IPv4 <-> MAC
   fs.readFile('/proc/net/arp', function(err, arpContent) {
     if (err) return done(err)
     // List connected clients (MAC addresses)
@@ -121,6 +120,7 @@ CaptivePortal.prototype._forgetClient = function(mac) {
 }
 
 CaptivePortal.prototype._getClientByIp = function(ip) {
+  ip = utils.getIPv4Address(ip)
   return _.chain(this.clients)
     .values()
     .find(function(client) { return client.ip === ip })

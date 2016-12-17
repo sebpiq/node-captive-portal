@@ -16,7 +16,7 @@ describe('client-handlers.ios', function() {
 
     it('should handle requests as expected', function(done) {
       var app = express()
-      var client = new Client('11:11:11:11:11:11', '::ffff:127.0.0.1')      
+      var client = new Client('11:11:11:11:11:11', '127.0.0.1')      
       var captivePortal = new CaptivePortal([ new ios.IosCnaHandler() ])
 
       captivePortal.clients[client.mac] = client
@@ -52,7 +52,7 @@ describe('client-handlers.ios', function() {
 
     it('should handle requests as expected', function(done) {
       var app = express()
-      var client = new Client('11:11:11:11:11:11', '::ffff:127.0.0.1')      
+      var client = new Client('11:11:11:11:11:11', '127.0.0.1')      
       var captivePortal = new CaptivePortal([
         new ios.IosBrowserHandler({
           connectingPagePath: path.join(__dirname, 'pages', 'ios', 'connecting.html'),

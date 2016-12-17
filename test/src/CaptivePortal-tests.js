@@ -15,7 +15,7 @@ describe('CaptivePortal', function() {
       var app = express()
       
       // Create a fake client
-      var client = new Client('11:11:11:11:11:11', '::ffff:127.0.0.1')
+      var client = new Client('11:11:11:11:11:11', '127.0.0.1')
       
       // Create a captive portal with fake client handlers 
       var captivePortal = new CaptivePortal([

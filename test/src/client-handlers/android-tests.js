@@ -16,7 +16,7 @@ describe('client-handlers.android', function() {
 
     it('should handle requests as expected', function(done) {
       var app = express()
-      var client = new Client('11:11:11:11:11:11', '::ffff:127.0.0.1')      
+      var client = new Client('11:11:11:11:11:11', '127.0.0.1')      
       var captivePortal = new CaptivePortal([ new android.AndroidCnaHandler() ])
 
       captivePortal.clients[client.mac] = client
@@ -40,7 +40,7 @@ describe('client-handlers.android', function() {
 
     it('should handle requests as expected', function(done) {
       var app = express()
-      var client = new Client('11:11:11:11:11:11', '::ffff:127.0.0.1')      
+      var client = new Client('11:11:11:11:11:11', '127.0.0.1')      
       var captivePortal = new CaptivePortal([ 
         new android.AndroidBrowserHandler({
           connectedPagePath: path.join(__dirname, 'pages', 'android', 'connected.html')
@@ -56,6 +56,7 @@ describe('client-handlers.android', function() {
         function(next) {
           request(app)
             .get('/generate_204')
+            .set('User-Agent', 'Android')
             .expect(200)
             .end(function(err, res) {
               if (err) return next(err)
